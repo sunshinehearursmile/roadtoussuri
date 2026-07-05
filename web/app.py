@@ -4,6 +4,7 @@ Drives the exact same engine as the terminal (agents.game_loop + mcp_server),
 and mounts the MCP tools_router so the whole service ships in one container.
 """
 import os
+import random
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -104,7 +105,9 @@ def create_app() -> FastAPI:
     @app.post("/api/action")
     def action(body: Action):
         if body.action == "travel":
+            before_leg = _guard(state_mod.get_state, body.session_id)["current_leg"]
             res = _guard(game_loop.travel, body.session_id)
+            _maybe_narrate(body.session_id, res, before_leg)
             res["state"] = _view(res["state"])
             return res
         if body.action == "rest":
@@ -161,6 +164,21 @@ def create_app() -> FastAPI:
 
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
     return app
+
+
+def _maybe_narrate(session_id: str, res: dict, before_leg: int) -> None:
+    """Attach an atmospheric NarratorAgent line to a travel response.
+
+    Mirrors the CLI: narrate on leg change, plus a rare atmospheric "day
+    description" (config: narrator.day_chance). Skipped when the day raised an
+    LLM event (avoid overload). Flavor only — changes no resources or stats.
+    """
+    if res.get("awaiting_action"):
+        return
+    ncfg = get_config().get("narrator", {})
+    leg_changed = before_leg != res["state"]["current_leg"]
+    if (ncfg.get("on_leg_change") and leg_changed) or (random.random() < ncfg.get("day_chance", 0)):
+        res["narrative"] = _guard(game_loop.narrate, session_id)
 
 
 def _view(st: dict) -> dict:

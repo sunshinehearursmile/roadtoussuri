@@ -58,6 +58,7 @@
   .shoprow input { width:70px; }
   .win { color:var(--ink); } .lose { color:var(--red); }
   .spin { color:var(--dim); }
+  #log div.narr { color:var(--cyan); font-style:italic; opacity:.9; }
 </style>
 </head>
 <body>
@@ -260,6 +261,7 @@ async function doAction(action){
       const eff=Object.entries(res.event_effect||{}).map(([k,v])=>`${v>0?'+':''}${v} ${k}`).join(', ');
       log(`• ${res.event_text}${eff?' ('+eff+')':''}`, 'cyan');
     }
+    if(res.narrative){ log(res.narrative, 'narr'); }
     if(res.awaiting_action){ openEvent(res); return; }
     checkOver(res.game_over);
   } catch(e){ alert(e.message); } finally { busy=false; }

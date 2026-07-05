@@ -225,6 +225,10 @@ hunting:
 gathering:
   food_range: [3, 8]
 
+narrator:
+  on_leg_change: true   # narrate when the caravan enters a new region (like the CLI)
+  day_chance: 0.15      # otherwise, rare atmospheric "day description" (no resource changes)
+
 event_chances:
   no_event: 0.50
   simple_event: 0.20

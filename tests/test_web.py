@@ -57,6 +57,20 @@ def test_pace_and_ration_setting():
     assert st["ration"] == "meager"
 
 
+def test_travel_narrates_on_leg_change(monkeypatch):
+    from mcp_server import events
+    from mcp_server import state as state_mod
+    monkeypatch.setattr(events, "roll_event", lambda sid: {"type": "none"})  # no LLM event
+    sid = client.post("/api/new", json={"class_id": "peasant_craftsman"}).json()["session_id"]
+    st = state_mod.get_state(sid)
+    st["distance_in_leg"] = 249  # one day tips over into leg_2
+    st["food_lbs"] = 100
+    state_mod.save_state(st)
+    res = client.post("/api/action", json={"session_id": sid, "action": "travel"}).json()
+    assert res["state"]["current_leg"] == 1                 # crossed a leg boundary
+    assert isinstance(res.get("narrative"), str) and res["narrative"]  # narrator fired
+
+
 def test_shop_endpoint():
     sid = client.post("/api/new", json={"class_id": "peasant_craftsman"}).json()["session_id"]
     data = client.post("/api/shop", json={"session_id": sid}).json()
