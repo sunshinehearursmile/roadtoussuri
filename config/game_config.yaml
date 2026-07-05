@@ -1,0 +1,265 @@
+meta:
+  start_date: "1862-04-15"
+  deadline_month: 11
+  total_distance_versts: 1600
+  family_size: 5  # always 5 family members, as in Oregon Trail
+
+classes:
+  peasant_craftsman:
+    name_ru: "Craftsmen-Peasants"
+    difficulty: "easy"
+    start_money: 250
+    start_livestock:
+      - { type: "ox", count: 4 }
+    hunting_skill: 0.30
+    gathering_skill: 0.20
+    score_multiplier: 1.0
+    flavor: "A well-off family with money and a heavy wagon."
+
+  peasant_farmer:
+    name_ru: "Farmer-Peasants"
+    difficulty: "medium"
+    start_money: 120
+    start_livestock:
+      - { type: "horse", count: 2 }
+      - { type: "cow", count: 1 }
+    hunting_skill: 0.50
+    gathering_skill: 0.40
+    score_multiplier: 1.5
+    flavor: "A sturdy family. The cow feeds them on the road."
+
+  old_believers:
+    name_ru: "Old Believers"
+    difficulty: "hard"
+    start_money: 60
+    start_livestock:
+      - { type: "ox", count: 2 }
+    hunting_skill: 0.80
+    gathering_skill: 0.70
+    score_multiplier: 3.0
+    flavor: "Persecuted. They rely on the forest and God."
+
+livestock:
+  horse:
+    name_ru: "Horse"
+    price: 20
+    speed_bonus: 12
+    carry_capacity_pud: 6
+    hunger_rate_taiga: -10
+    gnus_vulnerable: true
+    tiger_panic: true
+  ox:
+    name_ru: "Ox"
+    price: 15
+    speed_bonus: 7
+    carry_capacity_pud: 10
+    hunger_rate_taiga: 0
+    gnus_vulnerable: false
+    tiger_panic: false
+  cow:
+    name_ru: "Cow"
+    price: 15
+    speed_bonus: 0
+    carry_capacity_pud: 0
+    max_caravan_speed: 15
+    milk_food_per_day: 10
+    can_pull_cart: true
+    pull_speed: 7
+
+goods:
+  provisions:
+    name_ru: "Provisions"
+    base_price_per_pud: 1.5
+  equipment:
+    name_ru: "Equipment"
+    base_price: 5
+  ammo:
+    name_ru: "Ammunition"
+    base_price: 2
+    rounds_per_box: 20
+  spare_parts:
+    name_ru: "Spare parts"
+    base_price: 3
+
+rations:
+  hearty:   { food_per_day_lbs: 15, health_delta:   5 }
+  moderate: { food_per_day_lbs: 10, health_delta:   0 }
+  meager:   { food_per_day_lbs:  5, health_delta: -10 }
+
+pace:
+  steady:   { speed_mult: 1.0, health_delta:   0, breakdown_chance: 0.00 }
+  fast:     { speed_mult: 1.3, health_delta:  -5, breakdown_chance: 0.10 }
+  grueling: { speed_mult: 1.6, health_delta: -15, breakdown_chance: 0.25 }
+
+route:
+  - id: leg_1
+    name_ru: "Blagoveshchensk → Pashkovo"
+    distance: 250
+    speed_mod: 1.0
+    inflation: 1.0
+    biome: steppe
+    has_shop: true
+    risks: { breakdown: 0.05, disease: 0.05, bandits: 0.02 }
+
+  - id: leg_2
+    name_ru: "Pashkovo → Khabarovka"
+    distance: 300
+    speed_mod: 0.6
+    inflation: 1.5
+    biome: amur_marshes
+    has_shop: true
+    risks: { breakdown: 0.08, disease: 0.15, gnus: 0.40, bandits: 0.05 }
+
+  - id: leg_3
+    name_ru: "Khabarovka → Iman"
+    distance: 300
+    speed_mod: 0.8
+    inflation: 2.0
+    biome: ussuri_taiga
+    has_shop: true
+    risks: { breakdown: 0.10, disease: 0.10, bandits: 0.25, tiger: 0.08 }
+
+  - id: leg_4
+    name_ru: "Iman → Turiy Rog"
+    distance: 200
+    speed_mod: 0.9
+    inflation: 3.0
+    biome: border_taiga
+    has_shop: true
+    hunting_bonus: 1.5
+    risks: { breakdown: 0.08, disease: 0.08, bandits: 0.15, tiger: 0.05 }
+
+  - id: leg_5
+    name_ru: "Turiy Rog → Nikolskoye"
+    distance: 200
+    speed_mod: 1.0
+    inflation: 2.0
+    biome: khanka_plains
+    has_shop: true
+    risks: { breakdown: 0.05, disease: 0.05, bandits: 0.05 }
+
+  - id: leg_6
+    name_ru: "Nikolskoye → Shkotovo"
+    distance: 200
+    speed_mod: 0.7
+    inflation: 2.0
+    biome: sikhote_alin
+    has_shop: false
+    risks: { breakdown: 0.20, disease: 0.10, freeze: 0.30 }
+
+  - id: leg_7
+    name_ru: "Shkotovo → Vladivostok"
+    distance: 150
+    speed_mod: 1.0
+    inflation: 1.2
+    biome: coast
+    has_shop: true
+    risks: { breakdown: 0.03, disease: 0.03 }
+
+# Rich, historically accurate terrain grounding for the LLM event generator.
+# Keyed by leg `biome`. The 1862 route runs down the Amur, up the Ussuri,
+# across the Khanka plains and over the Sikhote-Alin to the Pacific.
+biome_descriptions:
+  steppe: >
+    Zeya-Bureya plain — the Amur forest-steppe, NOT arid grassland. Rolling
+    meadows and wetlands studded with birch and oak groves, laced by the wide
+    Amur river and its oxbow lakes; spring snowmelt floods the low ground.
+    Sparse, newly founded Cossack stanitsas line the riverbank.
+  amur_marshes: >
+    The Middle Amur lowland — a vast waterlogged floodplain of reed beds,
+    sedge marshes, braided river channels and clouds of biting midges (gnus).
+    Flat, humid and slow to cross; the Amur meets the Ussuri near Khabarovka.
+  ussuri_taiga: >
+    The Ussuri taiga — dense Manchurian mixed forest of Korean pine, cedar,
+    oak and linden tangled with lianas and wild ginseng. Home to the Amur
+    tiger, boar and bear; green, humid, and easy to lose the trail in.
+  border_taiga: >
+    Forested hills of the Ussuri–Khanka borderland, close to Manchuria. Rich
+    in game but prowled by hunhuz raiders slipping across the frontier; mixed
+    cedar-and-broadleaf woods cut by hidden ravines.
+  khanka_plains: >
+    The plains around Lake Khanka, the region's largest lake. Flat, fertile
+    lacustrine lowland of grassy steppe-meadow, reed shallows, blooming lotus
+    and huge flocks of waterfowl. Open sky, few trees, soft wet soil.
+  sikhote_alin: >
+    The Sikhote-Alin range — forested ridges and steep passes of spruce, fir
+    and stone birch. Cold, rugged and slow going; the first snows fall early
+    and the wind bites hard on the heights.
+  coast: >
+    The Sea of Japan shore by Amur Bay — humid, fog-wrapped hills of oak and
+    hornbeam dropping to rocky coves. Salt air and mist; ahead waits the raw
+    new military post of Vladivostok on the Golden Horn bay.
+
+diseases:
+  malaria:   { health_per_day: -8, cure_days: 5, biomes: [amur_marshes, ussuri_taiga] }
+  dysentery: { health_per_day: -6, cure_days: 4, biomes: [all] }
+  scurvy:    { health_per_day: -4, cure_days: 7, biomes: [all] }
+
+health:
+  max: 100
+  disease_trigger: 40
+  rest_recovery: 15
+
+weather_by_month:
+  4:  { health_mod: -3,  speed_mod: 0.9 }
+  5:  { health_mod:  0,  speed_mod: 1.0 }
+  6:  { health_mod:  0,  speed_mod: 1.0 }
+  7:  { health_mod: -2,  speed_mod: 0.9 }
+  8:  { health_mod: -3,  speed_mod: 0.8 }
+  9:  { health_mod: -5,  speed_mod: 0.9 }
+  10: { health_mod: -10, speed_mod: 0.7 }
+  11: { health_mod: -20, speed_mod: 0.0 }
+
+hunting:
+  ammo_cost_range: [1, 3]
+  max_food_lbs: 80
+  by_biome:
+    steppe:        { avg_food: 20 }
+    amur_marshes:  { avg_food: 30 }
+    ussuri_taiga:  { avg_food: 50 }
+    border_taiga:  { avg_food: 60 }
+    sikhote_alin:  { avg_food: 40 }
+    khanka_plains: { avg_food: 25 }
+    coast:         { avg_food: 15 }
+
+gathering:
+  food_range: [3, 8]
+
+event_chances:
+  no_event: 0.50
+  simple_event: 0.20
+  llm_event: 0.30
+
+simple_events:
+  - id: berries
+    text: "The children found a glade of wild ramson."
+    effect: { food: 5 }
+    biomes: [ussuri_taiga, border_taiga, sikhote_alin]
+  - id: mushrooms
+    text: "Gathered a basket of mushrooms."
+    effect: { food: 8 }
+    biomes: [ussuri_taiga, border_taiga, sikhote_alin]
+  - id: broken_wheel
+    text: "A wheel broke."
+    effect: { spare_parts: -1, days_lost: 1 }
+    biomes: [all]
+  - id: found_camp
+    text: "Found an abandoned camp with supplies."
+    effect: { food: 15, ammo: 5 }
+    biomes: [all]
+  - id: good_weather
+    text: "Fine weather, the caravan rolls briskly."
+    effect: { health: 3 }
+    biomes: [all]
+  - id: rain_delay
+    text: "A downpour washed out the road."
+    effect: { days_lost: 1 }
+    biomes: [amur_marshes, ussuri_taiga]
+  - id: ox_lame
+    text: "An ox went lame."
+    effect: { days_lost: 1 }
+    biomes: [sikhote_alin, steppe]
+  - id: fish
+    text: "Caught fish in the river."
+    effect: { food: 12 }
+    biomes: [amur_marshes, ussuri_taiga, border_taiga]

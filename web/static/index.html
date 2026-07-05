@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Road to Ussuri (1862)</title>
+<style>
+  :root {
+    --bg:#0a0f0a; --panel:#0f160f; --ink:#7dff9b; --dim:#3f8a55;
+    --amber:#ffcf6b; --red:#ff6b6b; --cyan:#6bd6ff; --line:#1f3a24;
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"DejaVu Sans Mono","SF Mono",Menlo,Consolas,monospace;
+    font-size:15px; line-height:1.5; padding:16px;
+  }
+  a { color:var(--cyan); }
+  h1 { font-size:20px; letter-spacing:2px; margin:0; color:var(--amber); }
+  .wrap { max-width:820px; margin:0 auto; }
+  .panel {
+    border:1px solid var(--line); background:var(--panel);
+    border-radius:6px; padding:14px 16px; margin:12px 0;
+  }
+  .header { text-align:center; border-color:var(--amber); }
+  .row { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .muted { color:var(--dim); }
+  .amber { color:var(--amber); } .red { color:var(--red); } .cyan { color:var(--cyan); }
+  .bar { font-family:monospace; letter-spacing:-1px; }
+  button {
+    background:#122016; color:var(--ink); border:1px solid var(--line);
+    padding:8px 12px; border-radius:5px; cursor:pointer; font-family:inherit; font-size:14px;
+  }
+  button:hover:not(:disabled) { background:#1a2e1f; border-color:var(--ink); }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  .btns { display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+  input, select {
+    background:#0a120c; color:var(--ink); border:1px solid var(--line);
+    padding:8px; border-radius:5px; font-family:inherit; font-size:14px; width:100%;
+  }
+  table { width:100%; border-collapse:collapse; }
+  td { padding:2px 4px; }
+  .fam td:first-child { color:#cfe; }
+  #log { max-height:180px; overflow-y:auto; font-size:13px; }
+  #log div { border-bottom:1px dotted var(--line); padding:3px 0; }
+  .overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,.82); display:none;
+    align-items:center; justify-content:center; padding:16px; z-index:10;
+  }
+  .overlay.show { display:flex; }
+  .modal { max-width:640px; width:100%; }
+  .sit { white-space:pre-wrap; font-size:15px; color:#dfe; }
+  .sev-high { border-color:var(--red); } .sev-medium { border-color:var(--amber); }
+  .sev-low { border-color:var(--ink); }
+  .center { text-align:center; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:6px 18px; }
+  .shoprow { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; }
+  .shoprow input { width:70px; }
+  .win { color:var(--ink); } .lose { color:var(--red); }
+  .spin { color:var(--dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- SETUP -->
+  <div id="setup">
+    <div class="panel header"><h1>ROAD TO USSURI</h1><div class="muted">Blagoveshchensk → Vladivostok, 1862</div></div>
+    <div class="panel">
+      <div class="amber">Choose your family:</div>
+      <div id="classes" class="btns" style="flex-direction:column; align-items:stretch;"></div>
+    </div>
+    <div class="panel" id="names-panel" style="display:none;">
+      <div class="amber">Names (optional):</div>
+      <div class="grid2" id="names"></div>
+      <div class="btns" style="margin-top:10px;"><button id="start-btn">Set out →</button></div>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="game" style="display:none;">
+    <div class="panel header">
+      <h1>ROAD TO USSURI (1862)</h1>
+      <div class="row" style="margin-top:6px;">
+        <span>Day: <b id="day"></b> <span class="muted" id="date"></span></span>
+        <span class="muted">To Vladivostok: <span class="amber" id="togo"></span> versts</span>
+      </div>
+      <div style="margin-top:6px;">Leg: <span class="cyan" id="leg"></span> <span class="bar" id="legbar"></span> <span id="legpct"></span>%</div>
+    </div>
+
+    <div class="panel">
+      <div class="amber">Family</div>
+      <table class="fam" id="family"></table>
+    </div>
+
+    <div class="panel">
+      <div class="grid2">
+        <span>Food: <b id="food"></b> lbs</span>
+        <span>Money: <b id="money"></b> rub.</span>
+        <span>Ammo: <b id="ammo"></b></span>
+        <span>Gear: <b id="equip"></b></span>
+        <span>Parts: <b id="spare"></b></span>
+        <span>Livestock: <span id="livestock"></span></span>
+        <span>Pace:
+          <select id="pace" onchange="setPace()">
+            <option value="steady">Steady</option>
+            <option value="fast">Fast</option>
+            <option value="grueling">Grueling</option>
+          </select>
+        </span>
+        <span>Ration:
+          <select id="ration" onchange="setRation()">
+            <option value="hearty">Hearty</option>
+            <option value="moderate">Moderate</option>
+            <option value="meager">Meager</option>
+          </select>
+        </span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="btns">
+        <button onclick="doAction('travel')">▶ Travel</button>
+        <button onclick="doAction('rest')">⛺ Rest</button>
+        <button onclick="doHunt()">🔫 Hunt</button>
+        <button onclick="doAction('gather')">🧺 Forage</button>
+        <button onclick="openShop()" id="shop-btn">🏪 Store</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="amber">Log</div>
+      <div id="log"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- EVENT MODAL -->
+<div class="overlay" id="event-overlay">
+  <div class="panel modal" id="event-box">
+    <div class="sit" id="event-text"></div>
+    <div id="event-input" style="margin-top:12px;">
+      <input id="event-action" placeholder="What do you do? (free text)" onkeydown="if(event.key==='Enter')submitEvent()" />
+      <div class="btns" style="margin-top:8px;"><button onclick="submitEvent()">Act</button></div>
+    </div>
+    <div id="event-verdict" style="display:none;">
+      <div class="sit amber" id="verdict-text" style="margin-top:10px;"></div>
+      <div class="muted" id="verdict-losses" style="margin-top:6px;"></div>
+      <div class="btns" style="margin-top:10px;"><button onclick="closeEvent()">Next →</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- SHOP MODAL -->
+<div class="overlay" id="shop-overlay">
+  <div class="panel modal">
+    <div class="row"><span class="amber">Store</span><span class="muted" id="shop-money"></span></div>
+    <div id="shop-list" style="margin-top:8px;"></div>
+    <div class="btns" style="margin-top:10px;"><button onclick="hide('shop-overlay')">Close</button></div>
+  </div>
+</div>
+
+<!-- GAME OVER MODAL -->
+<div class="overlay" id="over-overlay">
+  <div class="panel modal center">
+    <h1 id="over-title"></h1>
+    <div id="over-reason" style="margin:10px 0;"></div>
+    <div id="over-score" class="amber"></div>
+    <div class="btns center" style="justify-content:center; margin-top:12px;"><button onclick="location.reload()">Play again</button></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let SID = null, STATE = null, PENDING = null;
+
+async function api(path, body) {
+  const r = await fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body||{})});
+  if (!r.ok) { const e = await r.json().catch(()=>({detail:r.statusText})); throw new Error(e.detail||'error'); }
+  return r.json();
+}
+async function get(path) { const r = await fetch(path); return r.json(); }
+function show(id){ $(id).classList.add('show'); }
+function hide(id){ $(id).classList.remove('show'); }
+function bar(v, w=10){ v=Math.max(0,Math.min(100,v)); const f=Math.round(v/100*w); return '█'.repeat(f)+'░'.repeat(w-f); }
+
+const ROLE={father:'father',mother:'mother',son:'son',daughter:'daughter',elder:'elder'};
+const DIS={malaria:'Malaria',dysentery:'Dysentery',scurvy:'Scurvy'};
+function healthWord(m){ if(!m.alive) return 'Dead'; if(m.disease) return DIS[m.disease]||m.disease; if(m.health>=70)return 'Healthy'; if(m.health>=40)return 'Weak'; return 'Failing'; }
+
+// ---- setup ----
+async function initSetup(){
+  const data = await get('/api/classes');
+  const box = $('classes');
+  data.classes.forEach(c => {
+    const b = document.createElement('button');
+    b.style.textAlign='left';
+    b.innerHTML = `<b>${c.name_ru}</b> <span class="muted">(${c.difficulty}, ${c.start_money} rub.)</span><br><span class="muted">${c.flavor}</span>`;
+    b.onclick = () => pickClass(c.id);
+    box.appendChild(b);
+  });
+}
+let CHOSEN=null;
+const DEFAULT_NAMES=[['father','Ivan'],['mother','Marya'],['son','Petya'],['daughter','Dunya'],['elder','Old Yefim']];
+function pickClass(id){
+  CHOSEN=id;
+  const n=$('names'); n.innerHTML='';
+  DEFAULT_NAMES.forEach(([role,name])=>{
+    const wrap=document.createElement('div');
+    wrap.innerHTML=`<span class="muted">${ROLE[role]}</span><input value="${name}" data-role="${role}">`;
+    n.appendChild(wrap);
+  });
+  $('names-panel').style.display='block';
+  $('names-panel').scrollIntoView({behavior:'smooth'});
+}
+$('start-btn').onclick = async () => {
+  const names=[...document.querySelectorAll('#names input')].map(i=>i.value.trim());
+  try {
+    const st = await api('/api/new', {class_id:CHOSEN, names});
+    SID = st.session_id; STATE = st;
+    $('setup').style.display='none'; $('game').style.display='block';
+    render(st); log('The caravan set out from Blagoveshchensk.');
+  } catch(e){ alert(e.message); }
+};
+
+// ---- render ----
+function render(st){
+  STATE=st;
+  $('day').textContent=st.day; $('date').textContent=st.date;
+  $('togo').textContent=st.distance_to_go;
+  $('leg').textContent=st.leg_name; $('legbar').textContent=bar(st.leg_pct); $('legpct').textContent=st.leg_pct;
+  $('food').textContent=st.food_lbs; $('money').textContent=Math.round(st.money);
+  $('ammo').textContent=st.ammo; $('equip').textContent=st.equipment; $('spare').textContent=st.spare_parts;
+  $('livestock').textContent=st.livestock_summary;
+  $('pace').value=st.pace; $('ration').value=st.ration;
+  $('shop-btn').disabled = !st.has_shop;
+  const fam=$('family'); fam.innerHTML='';
+  st.family.forEach(m=>{
+    const col = !m.alive?'red':(m.disease?'amber':'');
+    fam.innerHTML += `<tr class="${col}"><td>${m.name} <span class="muted">(${ROLE[m.role]||m.role})</span></td>`+
+      `<td class="bar">${bar(m.health)}</td><td>${m.health}</td><td>${healthWord(m)}</td></tr>`;
+  });
+}
+function log(msg, cls=''){
+  const d=document.createElement('div'); if(cls) d.className=cls; d.textContent=msg;
+  $('log').prepend(d);
+}
+
+// ---- actions ----
+let busy=false;
+async function doAction(action){
+  if(busy) return; busy=true;
+  try {
+    const res = await api('/api/action', {session_id:SID, action});
+    render(res.state);
+    (res.day_report && res.day_report.events || []).forEach(e=>log('· '+e));
+    if(action==='gather'){ log(res.success?`Foraged +${res.food_gained} lbs`:'Found nothing.'); }
+    if(res.event && res.event.type==='simple'){
+      const eff=Object.entries(res.event_effect||{}).map(([k,v])=>`${v>0?'+':''}${v} ${k}`).join(', ');
+      log(`• ${res.event_text}${eff?' ('+eff+')':''}`, 'cyan');
+    }
+    if(res.awaiting_action){ openEvent(res); return; }
+    checkOver(res.game_over);
+  } catch(e){ alert(e.message); } finally { busy=false; }
+}
+async function doHunt(){
+  if(busy) return; busy=true;
+  try {
+    const spend = Math.min(3, STATE.ammo)||1;
+    const res = await api('/api/action', {session_id:SID, action:'hunt', ammo_spend:spend});
+    render(res.state);
+    log(res.success?`Hunt succeeded: +${res.food_gained} lbs (ammo -${res.ammo_spent})`
+                    :`Hunt came up empty (ammo -${res.ammo_spent})`);
+    checkOver(res.game_over);
+  } catch(e){ alert(e.message); } finally { busy=false; }
+}
+
+// ---- LLM event ----
+function openEvent(res){
+  PENDING={situation:res.situation};
+  $('event-box').className='panel modal sev-'+(res.severity||'medium');
+  $('event-text').textContent=res.situation;
+  $('event-input').style.display='block'; $('event-verdict').style.display='none';
+  $('event-action').value=''; show('event-overlay');
+  setTimeout(()=>$('event-action').focus(),50);
+}
+async function submitEvent(){
+  const action=$('event-action').value.trim(); if(!action) return;
+  $('event-input').style.display='none';
+  $('verdict-text').innerHTML='<span class="spin">The judge is deliberating…</span>';
+  $('event-verdict').style.display='block';
+  try {
+    const res = await api('/api/resolve', {session_id:SID, situation:PENDING.situation, action});
+    render(res.state);
+    $('verdict-text').textContent=res.narrative||'';
+    const ev=(res.applied&&res.applied.events||[]);
+    $('verdict-losses').textContent=ev.join('  ');
+    ev.forEach(e=>log('· '+e));
+    log('▸ '+action+' → '+(res.outcome||''), 'muted');
+    PENDING={over:res.game_over};
+  } catch(e){ $('verdict-text').textContent='Error: '+e.message; }
+}
+function closeEvent(){ hide('event-overlay'); if(PENDING&&PENDING.over) checkOver(PENDING.over); }
+
+// ---- settings ----
+async function setPace(){ const st=await api('/api/pace',{session_id:SID,value:$('pace').value}); render(st); }
+async function setRation(){ const st=await api('/api/ration',{session_id:SID,value:$('ration').value}); render(st); }
+
+// ---- shop ----
+async function openShop(){
+  const data = await api('/api/shop', {session_id:SID});
+  $('shop-money').textContent=`Money: ${Math.round(STATE.money)} rub. · inflation ×${data.inflation}`;
+  const list=$('shop-list'); list.innerHTML='';
+  Object.entries(data.prices).forEach(([item,info])=>{
+    const row=document.createElement('div'); row.className='shoprow';
+    row.innerHTML=`<span>${item} <span class="muted">${info.gives}</span></span>`+
+      `<span>${info.price} rub./${info.unit} <input type="number" min="1" value="1" id="q-${item}"> `+
+      `<button onclick="buy('${item}')">Buy</button></span>`;
+    list.appendChild(row);
+  });
+  show('shop-overlay');
+}
+async function buy(item){
+  const qty=parseInt($('q-'+item).value)||1;
+  try {
+    const res=await api('/api/buy',{session_id:SID,item,qty});
+    render(res.state); log(`Bought ${item} ×${qty} for ${res.cost} rub.`);
+    $('shop-money').textContent=`Money: ${Math.round(res.state.money)} rub.`;
+  } catch(e){ alert(e.message); }
+}
+
+// ---- game over ----
+async function checkOver(over){
+  if(!over || !over.over) return;
+  const data = await api('/api/score', {session_id:SID});
+  $('over-title').textContent = over.won ? 'VICTORY' : "JOURNEY'S END";
+  $('over-title').className = over.won ? 'win' : 'lose';
+  $('over-reason').textContent = over.reason;
+  const s=data.score;
+  $('over-score').textContent = `Score: ${s.score}  (alive: ${s.alive}, days: ${s.day}, ×${s.multiplier})`;
+  show('over-overlay');
+}
+
+initSetup();
+</script>
+</body>
+</html>
